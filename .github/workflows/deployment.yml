@@ -1,0 +1,67 @@
+name: Finelo
+
+on:
+  workflow_dispatch:
+
+  push:
+    tags:
+      - '*'
+
+env:
+  SERVICE_NAME: ai-duty-agent
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    outputs:
+      IMAGE: ${{ steps.export-image.outputs.IMAGE }}
+    steps:
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_FINELO }}
+          role-session-name: GitHub_to_AWS_via_FederatedOIDC
+          aws-region: ${{ secrets.AWS_REGION }}
+      - uses: aws-actions/amazon-ecr-login@v2
+        id: login-ecr
+      - uses: actions/checkout@v4
+      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-buildx-action@v3
+      - name: Build and push (with cache)
+        id: build
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Dockerfile
+          platforms: linux/arm64
+          push: true
+          tags: ${{ steps.login-ecr.outputs.registry }}/${{ env.SERVICE_NAME }}:${{ github.run_id }}
+          cache-from: type=gha
+          cache-to:   type=gha,mode=max
+      - name: Export image name
+        id: export-image
+        run: |
+          echo "IMAGE=${{ env.SERVICE_NAME }}:${{ github.run_id }}" >> $GITHUB_OUTPUT
+
+  deploy-production:
+    if: contains(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: zimran-tech/zimran-actions@v2
+        with:
+          service_name: ai-duty-agent
+          environment: prod
+          helm_version: 2.4.1
+          image_name: ${{ needs.build.outputs.IMAGE }}
+          k8s_namespace: services
+          debug_enabled: false
+          aws_role: ${{ secrets.AWS_ROLE_FINELO }}
+          aws_region: ${{ secrets.AWS_REGION }}
+          update_api_docs: false
+          github_pat: ${{ secrets.PAT }}
+          cluster_name: eks-production
+          product_name: finelo
