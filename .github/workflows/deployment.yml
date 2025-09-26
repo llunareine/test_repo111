@@ -51,7 +51,7 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
-      - uses: zimran-tech/zimran-actions@v2
+      - uses: zimran-tech/zimran-actions@v3
         with:
           service_name: ai-duty-agent
           environment: prod
