@@ -24,7 +24,7 @@ apps:
     replicaCount: 1
     command: [ "/bin/sh", "-c" ]
     args: [ "aerich", "upgrade", "&&", "python", "-m", "code.app" ]
-    externalNlb: nlb-coursiv-service
+    externalNlb: nlb-aiko-dev-service
     exposePort: true
     readinessProbe:
       httpGet:
@@ -49,7 +49,7 @@ apps:
     args: [ "aerich", "upgrade", "&&", "python", "-m", "code.scheduler" ]
 
 secrets:
-  awsSecretName: coursiv/staging/payments-solid
+  awsSecretName: aiko-dev/staging/payments-solid
   envs:
     - name: DATABASE_URL
     - name: RABBITMQ_URL
