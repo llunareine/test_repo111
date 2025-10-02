@@ -24,7 +24,7 @@ apps:
     replicaCount: 1
     command: [ "/bin/sh", "-c" ]
     args: [ "aerich", "upgrade", "&&", "python", "-m", "src.start_web" ]
-    externalNlb: nlb-finelo-service
+    externalNlb: nlb-aiko-dev-service
     exposePort: true
     readinessProbe:
       httpGet:
@@ -51,7 +51,7 @@ apps:
     args: [ "python", "-m", "src.start_scheduler" ]
 
 secrets:
-  awsSecretName: finelo/production/ai-duty-agent
+  awsSecretName: aiko-dev/production/ai-duty-agent
   envs:
     - name: DATABASE_URL
     - name: RABBITMQ_URL
