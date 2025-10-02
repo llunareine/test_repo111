@@ -1,4 +1,4 @@
-environment: prod
+environment: staging
 
 network:
   port: 2017
@@ -8,7 +8,7 @@ network:
 serviceAccount:
   name: secrets-csi-sa
   annotations: {
-    eks.amazonaws.com/role-arn: arn:aws:iam::llllll:role/secrets-csi-role-production
+    eks.amazonaws.com/role-arn: arn:aws:iam::hhhhhhh:role/secrets-csi-role-staging
   }
 
 nodeSelector: {
@@ -19,9 +19,9 @@ apps:
   - name: app
     resources:
       requests:
-        memory: "128M"
+        memory: "192M"
         cpu: "0.1"
-    replicaCount: 5
+    replicaCount: 1
     command: [ "/bin/sh", "-c" ]
     args: [ "aerich", "upgrade", "&&", "python", "-m", "code.app" ]
     externalNlb: nlb-coursiv-service
@@ -36,20 +36,20 @@ apps:
       requests:
         memory: "128M"
         cpu: "0.1"
-    replicaCount: 2
+    replicaCount: 1
     command: [ "/bin/sh", "-c" ]
     args: [ "aerich", "upgrade", "&&", "python", "-m", "code.consumers" ]
   - name: scheduler
     resources:
       requests:
-        memory: "256M"
+        memory: "128M"
         cpu: "0.1"
     replicaCount: 1
     command: [ "/bin/sh", "-c" ]
     args: [ "aerich", "upgrade", "&&", "python", "-m", "code.scheduler" ]
 
 secrets:
-  awsSecretName: coursiv/production/payments-solid
+  awsSecretName: coursiv/staging/payments-solid
   envs:
     - name: DATABASE_URL
     - name: RABBITMQ_URL
