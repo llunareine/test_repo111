@@ -1,14 +1,14 @@
 environment: prod
 
 network:
-  port: 2017
+  port: 3098
   containerTargetPort: 8000
   serviceEnabled: true
 
 serviceAccount:
   name: secrets-csi-sa
   annotations: {
-    eks.amazonaws.com/role-arn: arn:aws:iam::llllll:role/secrets-csi-role-production
+    eks.amazonaws.com/role-arn: arn:aws:iam::xxxxxxxxxxxx:role/secrets-csi-role-production
   }
 
 nodeSelector: {
@@ -19,61 +19,64 @@ apps:
   - name: app
     resources:
       requests:
+        cpu: "0.05"
         memory: "128M"
-        cpu: "0.1"
-    replicaCount: 5
+    replicaCount: 1
     command: [ "/bin/sh", "-c" ]
-    args: [ "aerich", "upgrade", "&&", "python", "-m", "code.app" ]
-    externalNlb: nlb-coursiv-service
+    args: [ "aerich", "upgrade", "&&", "python", "-m", "src.start_web" ]
+    externalNlb: nlb-finelo-service
     exposePort: true
     readinessProbe:
       httpGet:
         path: /health/
       initialDelaySeconds: 5
       periodSeconds: 5
-  - name: consumer
+
+  - name: worker
     resources:
       requests:
-        memory: "128M"
         cpu: "0.1"
-    replicaCount: 2
+        memory: "128M"
+    replicaCount: 1
     command: [ "/bin/sh", "-c" ]
-    args: [ "aerich", "upgrade", "&&", "python", "-m", "code.consumers" ]
+    args: [ "python", "-m", "src.start_worker" ]
+
   - name: scheduler
     resources:
       requests:
-        memory: "256M"
-        cpu: "0.1"
+        cpu: "0.05"
+        memory: "128M"
     replicaCount: 1
     command: [ "/bin/sh", "-c" ]
-    args: [ "aerich", "upgrade", "&&", "python", "-m", "code.scheduler" ]
+    args: [ "python", "-m", "src.start_scheduler" ]
 
 secrets:
-  awsSecretName: coursiv/production/payments-solid
+  awsSecretName: finelo/production/ai-duty-agent
   envs:
     - name: DATABASE_URL
     - name: RABBITMQ_URL
     - name: SENTRY_DSN
-    - name: REDIS_URL
     - name: ENVIRONMENT
-    - name: SOLID_WEBHOOK_SECRET_KEY
-    - name: SOLID_PUBLIC_KEY
-    - name: SOLID_SECRET_KEY
-    - name: USERS_URL
-    - name: PAYMENTS_URL
-    - name: OFFERS_URL
-    - name: CHANNEL_DECRYPTION_KEY
-    - name: GOOGLE_PAY_MERCHANT_ID
-    - name: IS_GOOGLE_PAY_ENABLED
-    - name: BIGQUERY_CREDENTIALS
-    - name: BIGQUERY_DATASET_NAME
-    - name: BIGQUERY_ORDER_VAT_TABLE_NAME
-    - name: BIGQUERY_CANCELLED_SUBSCRIPTIONS_TABLE_NAME
-    - name: BIGQUERY_ONECLICK_ORDERS_TABLE_NAME
-    - name: PAYMENTS_MERCHANT_NAME
-    - name: PAYPAL_SPLITTER_URL
-    - name: ZIMRAN_ANALYTICS_BIGQUERY_CREDENTIALS
-    - name: ZIMRAN_ANALYTICS_BIGQUERY_PROJECT_NAME
-    - name: ZIMRAN_ANALYTICS_BIGQUERY_DATASET_NAME
-    - name: ZIMRAN_ANALYTICS_BIGQUERY_TABLE_NAME
-    - name: UPSELL_OFFERS_URL
+    - name: OPENAI__API_KEY
+    - name: OPENSEARCH__SERVICE_NAME
+    - name: OPENSEARCH__KNOWLEDGE_BASE
+    - name: OPENSEARCH__URL
+    - name: AWS__REGION
+    - name: AWS__ACCESS_KEY_ID
+    - name: AWS__SECRET_ACCESS_KEY
+    - name: AWS__S3_TIMEOUT
+    - name: SLACK__TOKEN
+    - name: SLACK__CHANNEL
+    - name: GRAFANA__URL
+    - name: GRAFANA__API_KEY
+    - name: GRAFANA__ORG_ID
+    - name: GRAFANA__CLOUDWATCH_DATASOURCE_UID
+    - name: GRAFANA__LOKI_DATASOURCE_UID
+    - name: GRAFANA__QUERY_URL
+    - name: OPSGENIE__API_KEY
+    - name: OPSGENIE__BASE_URL
+    - name: OPSGENIE__USER
+    - name: OPSGENIE__DEFAULT_TEAM
+    - name: MEMORY_HOURS
+    - name: MCP__RABBITMQ_URL
+    - name: MCP__KUBERNETES_URL
